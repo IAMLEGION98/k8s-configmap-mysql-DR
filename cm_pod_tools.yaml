@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: "mysql-pod-tools-cm"
+data:
+    pod_backup.sh: |
+        #!/bin/bash
+        backup_name=$(date -u +"%FT%H%MZ")
+        source_directory=/var/lib/mysql_backup
+        backup_path=$source_directory/backup/$backup_name
+        mkdir -p $backup_path
+        mysqldump "$DATABASE_NAME" --single-transaction --quick --lock-tables=false -u root -p"$MYSQL_ROOT_PASSWORD" > $backup_path/backup_dump.sql
+        ## Cleanup older backup folders if more than 10 backups is present
+        ls -dt $source_directory/backup/*/ | sed -e '1,10d' | xargs  rm -rf
+    pod_init.sh: |
+        #!/bin/bash
+        apt-get update && apt-get install cron netcat -y
+        # Configure backup script to cron
+        (crontab -l 2>/dev/null; echo "*/5 * * * * /pod_tools/pod_backup.sh") | crontab -
+        #Start the Cron service
+        /usr/sbin/cron start
+        ## Attempting Pod restore
+        /pod_tools/pod_restore.sh &                
+        /entrypoint.sh mysqld
+    pod_restore.sh: |
+        #!/bin/bash
+        source_directory=/var/lib/mysql_backup
+        if [[ ! -z "$RESTORE_DIR" ]]; then
+            if [ ! -d "$source_directory/backup/$RESTORE_DIR" ]; then
+                echo "Specified Restore directory not found" 
+                exit 1
+            fi            
+            echo "Restore flag is set. Will restore now!"
+            until nc -z mysql 3306
+            do
+                echo "waiting database container..."
+                sleep 1
+            done              
+            mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$DATABASE_NAME" < $source_directory/backup/$RESTORE_DIR/backup_dump.sql
+            if [ $? -eq 0 ]; then
+                echo "Restore Successful."
+            else
+                echo "Restore Failed."
+            fi
+        else
+            echo "Restore flag unset. Skipping Restore."                        
+        fi

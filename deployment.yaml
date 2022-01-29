@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+            # - name: RESTORE_DIR
+            #   value: "<SPECIFY_RESTORE_FOLDER_NAME>"
+            - name: DATABASE_NAME
+              value: "backuprestore"
+          command: ["/bin/bash"]
+          args: ["-c", "/pod_tools/pod_init.sh"]
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+            - name: mysql-backup-storage
+              mountPath: /var/lib/mysql_backup
+            - name: mysql-pod-tools
+              mountPath: /pod_tools
+            - name: mysql-pod-scripts
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
+        - name: mysql-backup-storage
+          persistentVolumeClaim:
+            claimName: mysql-backup-pv-claim
+        - name: mysql-pod-scripts
+          configMap:
+            name: "mysql-pod-scripts-cm"
+        - name: mysql-pod-tools
+          configMap:
+            name: "mysql-pod-tools-cm"
+            items:
+              - key: pod_backup.sh
+                path: pod_backup.sh
+                mode: 0755
+              - key: pod_init.sh
+                path: pod_init.sh
+                mode: 0755
+              - key: pod_restore.sh
+                path: pod_restore.sh
+                mode: 0755

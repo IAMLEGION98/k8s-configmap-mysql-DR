@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: "mysql-pod-scripts-cm"
+data:
+    initdb.sql: |
+        CREATE database backuprestore;
