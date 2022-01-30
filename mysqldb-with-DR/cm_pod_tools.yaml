@@ -9,7 +9,7 @@ data:
         source_directory=/var/lib/mysql_backup
         backup_path=$source_directory/backup/$backup_name
         mkdir -p $backup_path
-        mysqldump --all-databases --single-transaction --quick --lock-tables=false -u root -p"$MYSQL_ROOT_PASSWORD" > $backup_path/backup_dump.sql
+        mysqldump --all-databases --single-transaction --quick --lock-tables=false -u root -pmyrootpassword > $backup_path/backup_dump.sql
         ## Cleanup older backup folders if more than 10 backups is present
         ls -dt $source_directory/backup/*/ | sed -e '1,36d' | xargs  rm -rf
     pod_init.sh: |
@@ -36,7 +36,7 @@ data:
                 echo "waiting database container..."
                 sleep 1
             done              
-            mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$DATABASE_NAME" < $source_directory/backup/$RESTORE_DIR/backup_dump.sql
+            mysql -u root -pmyrootpassword "$DATABASE_NAME" < $source_directory/backup/$RESTORE_DIR/backup_dump.sql
             if [ $? -eq 0 ]; then
                 echo "Restore Successful."
             else
