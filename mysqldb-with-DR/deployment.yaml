@@ -20,7 +20,7 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               value: myrootpassword
             # - name: RESTORE_DIR
-            #   value: "<SPECIFY_RESTORE_FOLDER_NAME>"
+            #   value: "2022-01-30T1330Z"
             - name: DATABASE_NAME
               value: "backuprestore"
           command: ["/bin/bash"]
