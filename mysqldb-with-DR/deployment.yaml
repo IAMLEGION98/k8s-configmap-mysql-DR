@@ -18,7 +18,7 @@ spec:
           name: mysql
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: password
+              value: myrootpassword
             # - name: RESTORE_DIR
             #   value: "<SPECIFY_RESTORE_FOLDER_NAME>"
             - name: DATABASE_NAME

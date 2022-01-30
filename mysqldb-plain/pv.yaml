@@ -1,0 +1,25 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mysql-pv-volume
+spec:
+  storageClassName: hostpath
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /Users/Rajanish/Downloads/Data/Simple
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mysql-pv-claim
+spec:
+  storageClassName: hostpath
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
